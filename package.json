@@ -7,13 +7,20 @@
     "name": "Vincent Weevers",
     "email": "mail@vincentweevers.nl"
   },
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "tape test/**/*.js"
+    "test": "babel-tape-runner test/*.js | tap-spec",
+    "build": "babel *.js -d dist",
+    "prepublish": "npm run build"
   },
   "dependencies": {
     "kind-of": "~3.0.2"
   },
   "devDependencies": {
+    "babel-tape-runner": "~2.0.0",
     "tape": "~4.2.2"
   },
   "keywords": [
