@@ -9,29 +9,38 @@ const cache = (function(mem) {
   return { get(k) { return mem[k] }, set(k,v) { mem[k] = v } }
 })({})
 
-function cached(expr) {
+function cached(expr, placeholders) {
   if (typeof expr !== 'string') {
     throw new Error('Type expression must be a string')
   }
 
-  let fn = cache.get(expr)
-  if (fn === undefined) cache.set(expr, fn = generate(expr))
+  const id = placeholders.length > 0
+      ? placeholders.concat(expr).join(',')
+      : expr
+
+  let fn = cache.get(id)
+  if (fn === undefined) cache.set(id, fn = generate(expr, placeholders))
 
   return fn
 }
 
-function assert(val, type, name) {
+function assert(val, type, name, ...placeholders) {
+  if (typeof name !== 'string' || name === '') {
+    throw new Error('Empty name for assertion')
+  }
+
   const kindOfType = kindOf(type)
 
   if (kindOfType === 'array') {
     // AND assertion
-    type.forEach(t => assert(val, t, name))
+    type.forEach(t => assert(val, t, name, ...placeholders))
   } else if (kindOfType === 'function') {
     if (!type(val)) throw new Error(message(val, name))
   } else if (kindOfType === 'boolean') {
     if (type === false) throw new Error(message(val, name))
   } else if (kindOfType === 'regex' || kindOfType === 'string') {
-    const err = cached(type.toString())(val, name, message, kindOf)
+    const check = cached(type.toString(), placeholders)
+    const err = check(val, name, message, kindOf)
     if (err) throw new Error(err)
   } else {
     throw new Error(`Invalid assertion type: ${kindOfType}`)
@@ -40,8 +49,8 @@ function assert(val, type, name) {
   return val
 }
 
-function generate(expr, isChild = false, indent = 1) {
-  const anyOf = isChild ? expr : parse(expr)
+function generate(expr, placeholders, isChild = false, indent = 1) {
+  const anyOf = isChild ? expr : parse(expr, placeholders)
       , lines = []
 
   // if (!isChild) console.log(JSON.stringify(anyOf, null, ' '))
@@ -52,7 +61,7 @@ function generate(expr, isChild = false, indent = 1) {
 
   // Start function body
   indent++; if (!isChild) push("'use strict';")
-  push('var err,i,l,arr,subname')
+  push('var err,i,l,arr')
 
   // Start while loop
   const doWhile = anyOf.length > 1
@@ -82,7 +91,7 @@ function generate(expr, isChild = false, indent = 1) {
           , keyIter = `k${i}`
           , keyMembers = []
 
-      push( `var ${valIter} = ${generate(members, true, indent)}\n`
+      push( `var ${valIter} = ${generate(members, placeholders, true, indent)}\n`
           , 'if (err === undefined) {' )
 
       members.forEach(m => {
@@ -92,7 +101,7 @@ function generate(expr, isChild = false, indent = 1) {
       })
 
       if (keyMembers.length) {
-        const fn = generate(keyMembers, true, indent)
+        const fn = generate(keyMembers, placeholders, true, indent)
         push( `const ${keyIter} = ${fn}\n`)
       }
 
@@ -127,26 +136,21 @@ function generateIterator(type, valIter, keyIter) {
   if (type === 'array') {
     // Ignoring keyIterator, can only be numbers
     return [ `for(i=0, l=val.length; i<l; i++) {`
-           , '  let subname = name ? name + "[" + i + "]" : i'
-           , `  if (err = ${valIter}(val[i], subname, message, kindOf)) break`
+           , `  if (err = ${valIter}(val[i], name + "[" + i + "]", message, kindOf)) break`
            , `}` ]
   } else if (type === 'object') {
     // Ignoring keyIterator, can only be strings
     return [ `for(arr = Object.keys(val), i=0, l=arr.length; i<l; i++) {`
-           , '  subname = name ? name + "." + arr[i] : arr[i]'
-           , `  if (err = ${valIter}(val[arr[i]], subname, message, kindOf)) break`
+           , `  if (err = ${valIter}(val[arr[i]], name + "." + arr[i], message, kindOf)) break`
            , `}` ]
   } else if (type === 'map') {
-    const lines =
-      [ `for(arr = val.entries(), i=0, l=arr.length; i<l; i++) {`
-      , '  subname = name ? name + "[" + i + "]" : i' ]
+    const lines = [ `for(arr = val.entries(), i=0, l=arr.length; i<l; i++) {` ]
 
     if (keyIter !== null) {
-      lines.push('  let subkey = name ? "key " + i + " in " + name : "key " + i')
-      lines.push(`  if (err = ${keyIter}(arr[i][0], subkey, message, kindOf)) break`)
+      lines.push(`  if (err = ${keyIter}(arr[i][0], "key " + i + " in " + name, message, kindOf)) break`)
     }
 
-    lines.push(`  if (err = ${valIter}(arr[i][1], subname, message, kindOf)) break`)
+    lines.push(`  if (err = ${valIter}(arr[i][1], name + "[" + i + "]", message, kindOf)) break`)
     lines.push(`}`)
 
     return lines
@@ -157,9 +161,7 @@ function generateIterator(type, valIter, keyIter) {
 
 function message(val, name, msg = 'Invalid value') {
   const json = JSON.stringify(val)
-      , subject = name ? ` for "${name}"` : ''
-
-  return `${msg}${subject}, got ${json} (${kindOf(val)})`
+  return `${msg} for "${name}", got ${json} (${kindOf(val)})`
 }
 
 module.exports = assert

@@ -1,10 +1,11 @@
 const [ TOKEN_OPEN, TOKEN_CLOSE, TOKEN_OR, TOKEN_KEY ] = [ '<', '>', '|', ':' ]
     , [ TOKEN_REGEX, TOKEN_ESC, TOKEN_NEGATE ] = [ '/', '\\', '!' ]
+    , [ TOKEN_PLACEHOLDER ] = [ '$' ]
     , [ MODE_REGEX, MODE_REGEX_FLAGS, MODE_NORMAL ] = [ 1, 2, 3 ]
     , [ LO_NUM, HI_NUM, LO_AZ, HI_AZ ] = [ 48, 57, 97, 122 ]
 
 // Yeah it's not pretty, but fairly fast
-module.exports = function parse(expr) {
+module.exports = function parse(expr, placeholders) {
   let stack = [{}]
     , node = stack[0]
     , mode = MODE_NORMAL
@@ -27,6 +28,11 @@ module.exports = function parse(expr) {
       mode = MODE_REGEX
       node.regex = t
       node.type = 'string'
+    } else if (t === TOKEN_PLACEHOLDER) {
+      const val = placeholders.shift()
+      if (!val) invalid(i, `Missing value for placeholder`)
+      expr = expr.slice(0, i) + val + expr.slice(i+1)
+      l = expr.length; i--; continue; // Revisit
     } else if (t === TOKEN_NEGATE) {
       if (node.type) invalid(i, `Unexpectedly late NEGATE token "${t}"`)
       node.negate = !node.negate

@@ -15,8 +15,13 @@ class Example {
   constructor(age, mixed, words, store, opts = {}) {
     this.age = t(age, 'n', 'age')
     this.mixed = t(mixed, 'a<s|n>', 'mixed')
-    this.words = t(words, 'a</^[a-z]+$/>', 'words')
     this.store = t(store, 'map<fn:re>', 'store')
+
+    // Spaces are allowed
+    this.words = t(words, 'a < /^[a-z]+$/ >', 'words')
+
+    // Or use placeholders
+    this.words = t(words, 'a<$>', 'words', /^[a-z]+$/)
 
     // Throw if a is defined and not a boolean
     const { a = false } = t(opts, 'o<bool>', 'opts')
@@ -34,27 +39,28 @@ new Example(27, [1, 'a'], ['beep'], goodboy, { a: true })
 new Example('bad', [null], ['BEEP'], badboy, { a: 0 })
 ```
 
-## `t(value, assertion, name = '')`
+## `t(value, assertion, name, ...placeholders)`
 
-Throws if `value` does not pass `assertion`. Otherwise, it returns `value`. The `name` will be used in the error message.
+The first three arguments are required. Throws if `value` does not pass `assertion`. Otherwise, returns `value`. The `name` will be used in the error message.
 
 ### assertions
 
-If `assertion` is a string or regular expression, it will be treated as a type expression (see below). If it's a function, it will receive the value and should return `false` if the value is invalid. A boolean `assertion` works like `assert(assertion === true)`. If `assertion` is an array, each element must pass assertion. For example, to assert that an argument is a number and greater than two: `t(arg, ['n', (v) => v > 2 ])`.
+If `assertion` is a string or regular expression, it will be treated as a type expression (see below). If it's a function, it will receive the value and should return `false` if the value is invalid. A boolean `assertion` works like `assert(assertion === true)`. If `assertion` is an array, each element must pass assertion. For example, to assert that an argument is a number and greater than two: `t(arg, ['n', (v) => v > 2 ], 'arg')`.
 
 ### type expressions
 
 - Aliases: `a<s|f>` is `arr<str|fn>` is `array<string|function>`. See the [full list](https://github.com/vweevers/node-mini-type-assert/blob/master/alias.js).
-- Member types: `a<n>` means an array of numbers. Note that the entire iterable (array, object, map, ..) will be traversed, so use it wisely.
-- Member key types: `map<r:n>` means a Map with regular expressions for keys and numbers for values. Again, traversed entirely. Key types are ignored for arrays (can only be numbers) and objects (can only be strings).
+- Member types: `a<n>` (an array of numbers). Note that the entire iterable (array, object, map, ..) will be traversed, so use it wisely.
+- Member key types: `map<r:n>` (a Map with regular expressions for keys and numbers for values). Again, traversed entirely. Key types are ignored for arrays (can only be numbers) and objects (can only be strings).
 - OR: `n|s` (a number or string)
 - Regular expressions:
   - `/\d/` (a string containing at least one number)
-  - `a</^x$/i>` (an array containing "x" or "X" strings)
-  - `map</^[a-z]+$/:/^[a-z]+$/>` (a Map with lowercase strings for both keys and values)
+  - `a < /^x$/i >` (an array containing "x" or "X" strings)
+  - `map < /^[a-z]+$/ : /^[a-z]+$/ >` (a Map with lowercase strings for both keys and values)
 - Negation: `!fn` (anything but a function)
 - Whitespace: `s | a` is `s|a`. Except within regular expressions, spaces are ignored.
 - Operator precedence: `s|a<n|b>` (a string, or an array containing numbers or booleans)
+- Placeholders: `t(1, '$|$', 'arg', 's', 'n')` is the same as `t(1, 's|n', 'arg')`
 
 ## install
 
