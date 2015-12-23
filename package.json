@@ -1,6 +1,6 @@
 {
   "name": "mini-type-assert",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Concise type assertions like a<map<fn:s>>",
   "license": "MIT",
   "author": {
