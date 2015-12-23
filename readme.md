@@ -11,7 +11,7 @@
 ```js
 const t = require('mini-type-assert')
 
-class Example{
+class Example {
   constructor(age, mixed, words, store, opts = {}) {
     this.age = t(age, 'n', 'age')
     this.mixed = t(mixed, 'a<s|n>', 'mixed')
