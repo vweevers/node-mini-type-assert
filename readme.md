@@ -18,6 +18,7 @@ class Example {
     this.words = t(words, 'a</^[a-z]+$/>', 'words')
     this.store = t(store, 'map<fn:re>', 'store')
 
+    // Throw if a is defined and not a boolean
     const { a = false } = t(opts, 'o<bool>', 'opts')
   }
 }
