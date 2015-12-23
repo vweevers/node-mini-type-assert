@@ -6,8 +6,6 @@
 
 ## example
 
-`npm i mini-type-assert`
-
 ```js
 const t = require('mini-type-assert')
 
@@ -37,6 +35,26 @@ new Example(27, [1, 'a'], ['beep'], goodboy, { a: true })
 
 // Throws
 new Example('bad', [null], ['BEEP'], badboy, { a: 0 })
+```
+
+### decorator
+
+If you like ES7 decorators, check out [mini-type-decorator](https://github.com/vweevers/mini-type-decorator).
+
+```js
+const t = require('mini-type-decorator')
+
+@t('a<s>', ['n', (n) => n <= 10], 'o<b>')
+class Example {
+  constructor(tags, grade, flags = {}) {
+    this.tags = tags
+  }
+
+  @t('s')
+  say(what) {
+    console.log(what)
+  }
+}
 ```
 
 ## `t(value, assertion, name, ...placeholders)`
