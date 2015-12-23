@@ -1,0 +1,32 @@
+{
+  "name": "mini-type-assert",
+  "version": "0.0.1",
+  "description": "Concise type assertions like a<map<fn:s>>",
+  "license": "MIT",
+  "author": {
+    "name": "Vincent Weevers",
+    "email": "mail@vincentweevers.nl"
+  },
+  "scripts": {
+    "test": "tape test/**/*.js"
+  },
+  "dependencies": {
+    "kind-of": "~3.0.2"
+  },
+  "devDependencies": {
+    "tape": "~4.2.2"
+  },
+  "keywords": [
+    "assert",
+    "type",
+    "typeof",
+    "kind-of"
+  ],
+  "engines": {
+    "node": ">=0.10.0",
+    "npm": ">=2.0.0"
+  },
+  "repository": "vweevers/node-mini-type-assert",
+  "bugs": "https://github.com/vweevers/node-mini-type-assert/issues",
+  "homepage": "https://github.com/vweevers/node-mini-type-assert"
+}
