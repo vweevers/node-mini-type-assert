@@ -34,4 +34,5 @@ module.exports =
 
   , r: 'regexp'
   , re: 'regexp'
-  , reg: 'regexp' }
+  , reg: 'regexp'
+  , regex: 'regexp' }

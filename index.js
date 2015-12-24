@@ -38,7 +38,7 @@ function assert(val, type, name, ...placeholders) {
     if (!type(val)) throw new Error(message(val, name))
   } else if (kindOfType === 'boolean') {
     if (type === false) throw new Error(message(val, name))
-  } else if (kindOfType === 'regex' || kindOfType === 'string') {
+  } else if (kindOfType === 'regexp' || kindOfType === 'string') {
     const check = cached(type.toString(), placeholders)
     const err = check(val, name, message, kindOf)
     if (err) throw new Error(err)
