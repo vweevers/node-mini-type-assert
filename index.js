@@ -25,6 +25,8 @@ function cached(expr, placeholders) {
 }
 
 function assert(val, type, name, ...placeholders) {
+  if (assert.disabled) return val;
+
   if (typeof name !== 'string' || name === '') {
     throw new Error('Empty name for assertion')
   }
@@ -166,3 +168,4 @@ function message(val, name, msg = 'Invalid value') {
 
 module.exports = assert
 assert.parse = parse
+assert.disabled = false;
