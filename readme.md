@@ -61,6 +61,9 @@ class Example {
 
 The first three arguments are required. Throws if `value` does not pass `assertion`. Otherwise, returns `value`. The `name` will be used in the error message.
 
+## `t.disabled` (defaults to `false`)
+If set to `true` will disable validation entirely. This can be useful if you don't want the overhead in production environments.
+
 ### assertions
 
 If `assertion` is a string or regular expression, it will be treated as a type expression (see below). If it's a function, it will receive the value and should return `false` if the value is invalid. A boolean `assertion` works like `assert(assertion === true)`. If `assertion` is an array, each element must pass assertion. For example, to assert that an argument is a number and greater than two: `t(arg, ['n', (v) => v > 2 ], 'arg')`.
